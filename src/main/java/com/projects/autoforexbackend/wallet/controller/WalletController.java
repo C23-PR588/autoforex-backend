@@ -18,7 +18,7 @@ public class WalletController {
         User dummyUser = new User("john_doe");
         dummyUser.setEmail("john@example.com");
         Wallet wallet = dummyUser.getWallet();
-        wallet.getCurrencies().put("IDR", 10.0);
+        wallet.getCurrencies().put("IDR", 1000000.0);
         wallet.getCurrencies().put("USD", 11.0);
         wallet.getCurrencies().put("EUR", 3.0);
         users.put(dummyUser.getUsername(), dummyUser);
@@ -52,6 +52,20 @@ public class WalletController {
             return user.getWallet().getCurrencies();
         }
         return new HashMap<>();
+    }
+
+    //dummy for user
+    public User getUser(String username) {
+        return users.get(username);
+    }
+
+    @PostMapping("/addUser")
+    public String addUser(@RequestBody User user) {
+        if (!users.containsKey(user.getUsername())) {
+            users.put(user.getUsername(), user);
+            return "User added successfully.";
+        }
+        return "User already exists.";
     }
 }
 
