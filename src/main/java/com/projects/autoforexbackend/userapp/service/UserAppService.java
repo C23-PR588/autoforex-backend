@@ -31,6 +31,6 @@ public class UserAppService implements UserDetailsService {
         String encode = bCryptPasswordEncoder.encode(userApp.getPassword());
         userApp.setPassword(encode);
         userAppRepository.save(userApp);
-        return "works";
+        return "berhasil";
     }
 }
