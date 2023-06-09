@@ -1,71 +1,136 @@
 package com.projects.autoforexbackend.wallet.controller;
 
+import com.projects.autoforexbackend.currency.model.Currency;
+import com.projects.autoforexbackend.currency.model.CurrencyData;
+import com.projects.autoforexbackend.userapp.model.UserApp;
+import com.projects.autoforexbackend.userapp.repository.UserAppRepository;
+import com.projects.autoforexbackend.wallet.repository.WalletRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.projects.autoforexbackend.user.*;
 import com.projects.autoforexbackend.wallet.model.Wallet;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/wallet")
 public class WalletController {
 
-    private final Map<String, User> users = new HashMap<>();
+    private final UserAppRepository userAppRepository;
+    private final WalletRepository walletRepository;
 
-    public WalletController() {
-        // Create a dummy user and add it to the users map
-        User dummyUser = new User("john_doe");
-        dummyUser.setEmail("john@example.com");
-        Wallet wallet = dummyUser.getWallet();
-        wallet.getCurrencies().put("IDR", 1000000.0);
-        wallet.getCurrencies().put("USD", 11.0);
-        wallet.getCurrencies().put("EUR", 3.0);
-        users.put(dummyUser.getUsername(), dummyUser);
+    public WalletController(UserAppRepository userAppRepository, WalletRepository walletRepository) {
+        this.userAppRepository = userAppRepository;
+        this.walletRepository = walletRepository;
     }
 
-    @PostMapping("/addCurrency/{username}")
-    public String addCurrency(@PathVariable String username,
-                              @RequestParam String currencyName,
-                              @RequestParam Double currencyValue) {
-        User user = users.get(username);
-        if (user == null) {
-            user = new User(username);
-            users.put(username, user);
-        }
-        Wallet wallet = user.getWallet();
+    @PostMapping("/add")
+    public ResponseEntity<String> addWallet(
+            @RequestParam String username,
+            @RequestParam String currencyName,
+            @RequestParam Double currencyValue
+    ) {
+        Optional<UserApp> optionalUser = userAppRepository.findByEmail(username);
+        if (optionalUser.isPresent()) {
+            List<Wallet> wallets = walletRepository.findByUsername(username);
 
-        if (wallet.getCurrencies().containsKey(currencyName)) {
-            Double existingValue = wallet.getCurrencies().get(currencyName);
-            wallet.getCurrencies().put(currencyName, existingValue + currencyValue);
+            // Check if a wallet with the same currency name already exists
+            Optional<Wallet> existingWallet = wallets.stream()
+                    .filter(wallet -> wallet.getCurrencyName().equals(currencyName))
+                    .findFirst();
+
+            if (existingWallet.isPresent()) {
+                Wallet wallet = existingWallet.get();
+                Double currentValue = wallet.getCurrencyValue();
+                wallet.setCurrencyValue(currentValue + currencyValue);
+                walletRepository.save(wallet);
+            } else {
+                Wallet newWallet = new Wallet(username, currencyName, currencyValue);
+                walletRepository.save(newWallet);
+            }
+
+            return ResponseEntity.ok("Wallet added/updated successfully.");
         } else {
-            wallet.getCurrencies().put(currencyName, currencyValue);
+            return ResponseEntity.badRequest().body("User not found.");
         }
-
-        return "Currency added successfully.";
     }
 
     @GetMapping("/getCurrencies/{username}")
     public Map<String, Double> getCurrencies(@PathVariable String username) {
-        User user = users.get(username);
-        if (user != null) {
-            return user.getWallet().getCurrencies();
+        List<Wallet> wallets = walletRepository.findByUsername(username);
+        Map<String, Double> walletData = new HashMap<>();
+
+        for (Wallet wallet : wallets) {
+            walletData.put(wallet.getCurrencyName(), wallet.getCurrencyValue());
         }
-        return new HashMap<>();
+
+        return walletData;
     }
 
-    //dummy for user
-    public User getUser(String username) {
-        return users.get(username);
+    @PostMapping("/buyCurrency")
+    public ResponseEntity<String> buyCurrency(
+            @RequestParam String username,
+            @RequestParam String currencyName,
+            @RequestParam Double currencyValue
+    ) {
+        Optional<UserApp> optionalUser = userAppRepository.findByEmail(username);
+        if (optionalUser.isPresent()) {
+            List<Wallet> wallets = walletRepository.findByUsername(username);
+
+            List<Currency> currencies = CurrencyData.getCurrencies();
+            Currency targetCurrency = null;
+
+            for (Currency currency : currencies) {
+                if (currency.getName().equalsIgnoreCase(currencyName)) {
+                    targetCurrency = currency;
+                    break;
+                }
+            }
+
+            if (targetCurrency == null) {
+                return ResponseEntity.badRequest().body("Currency not found.");
+            }
+
+            Double targetCurrencyValue = targetCurrency.getCurrentValue();
+
+            // Calculate the total value in IDR required to buy the target currency
+            Double totalIDRValue = targetCurrencyValue * currencyValue;
+
+            // Check if the user has sufficient funds in the IDR wallet
+            Wallet idrWallet = wallets.stream()
+                    .filter(wallet -> wallet.getCurrencyName().equalsIgnoreCase("IDR"))
+                    .findFirst()
+                    .orElse(null);
+            if (idrWallet == null || idrWallet.getCurrencyValue() < totalIDRValue) {
+                return ResponseEntity.badRequest().body("Insufficient funds in IDR wallet.");
+            }
+
+            // Check if a wallet with the same currency name already exists
+            Optional<Wallet> existingWallet = wallets.stream()
+                    .filter(wallet -> wallet.getCurrencyName().equalsIgnoreCase(currencyName))
+                    .findFirst();
+
+            if (existingWallet.isPresent()) {
+                Wallet wallet = existingWallet.get();
+                Double currentValue = wallet.getCurrencyValue();
+                wallet.setCurrencyValue(currentValue + currencyValue);
+                walletRepository.save(wallet);
+            } else {
+                Wallet newWallet = new Wallet(username, currencyName, currencyValue);
+                walletRepository.save(newWallet);
+            }
+
+            // Update the IDR wallet by reducing the value
+            idrWallet.setCurrencyValue(idrWallet.getCurrencyValue() - totalIDRValue);
+            walletRepository.save(idrWallet);
+
+            return ResponseEntity.ok("Wallet updated successfully.");
+        } else {
+            return ResponseEntity.badRequest().body("User not found.");
+        }
     }
 
-    @PostMapping("/addUser")
-    public String addUser(@RequestBody User user) {
-        if (!users.containsKey(user.getUsername())) {
-            users.put(user.getUsername(), user);
-            return "User added successfully.";
-        }
-        return "User already exists.";
-    }
 }
 
