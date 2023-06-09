@@ -4,12 +4,9 @@ import com.projects.autoforexbackend.currency.model.Currency;
 import com.projects.autoforexbackend.currency.model.CurrencyData;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +31,34 @@ public class CurrencyController {
             if (responseData != null) {
                 Double value = responseData.get("data").get("IDR");
                 currencyData.put(baseCurrency, value);
-                Currency currency = new Currency(baseCurrency, value);
-                CurrencyData.getCurrencies().add(currency); // Add currency to the list
+
+                List<Currency> currencies = CurrencyData.getCurrencies();
+                for (Currency currency : currencies) {
+                    if (currency.getName().equals(baseCurrency)) {
+                        currency.setCurrentValue(value); // Update the currency value
+                        break;
+                    }
+                }
             }
         }
 
         return ResponseEntity.ok(currencyData);
+    }
+
+    @PutMapping("/{currencyName}/changeValue")
+    public ResponseEntity<String> changeCurrencyValue(
+            @PathVariable String currencyName,
+            @RequestParam double inputValue
+    ) {
+        List<Currency> currencies = CurrencyData.getCurrencies();
+
+        for (Currency currency : currencies) {
+            if (currency.getName().equalsIgnoreCase(currencyName)) {
+                currency.setCurrentValue(inputValue);
+                return ResponseEntity.ok("Currency value changed successfully.");
+            }
+        }
+
+        return ResponseEntity.notFound().build();
     }
 }
