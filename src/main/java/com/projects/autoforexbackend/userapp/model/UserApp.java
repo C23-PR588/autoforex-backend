@@ -1,5 +1,6 @@
 package com.projects.autoforexbackend.userapp.model;
 
+import com.projects.autoforexbackend.wallet.model.Wallet;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,6 +35,9 @@ public class UserApp implements UserDetails {
     private String email;
     private String password;
     @Enumerated(STRING)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "wallet_id")
+    private Wallet wallet;
     private UserRole userRole;
     private Boolean locked = true;
     private Boolean disabled = true;
@@ -48,6 +52,7 @@ public class UserApp implements UserDetails {
         this.email = email;
         this.password = password;
         this.userRole = userRole;
+        this.wallet = new Wallet(email, "IDR", 100000.0);
     }
 
     @Override
