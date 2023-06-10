@@ -11,14 +11,23 @@ public class Wallet {
     private String username;
     private String currencyName;
     private Double currencyValue;
+    private Double target;
 
-    public Wallet() {
+    public Wallet(String username, String currencyName, Double currencyValue, Double target) {
+        this.username = username;
+        this.currencyName = currencyName;
+        this.currencyValue = currencyValue;
+        this.target = target;
     }
 
     public Wallet(String username, String currencyName, Double currencyValue) {
         this.username = username;
         this.currencyName = currencyName;
         this.currencyValue = currencyValue;
+    }
+
+    public Wallet() {
+
     }
 
     // Getters and Setters
@@ -53,5 +62,13 @@ public class Wallet {
 
     public void setCurrencyValue(Double currencyValue) {
         this.currencyValue = currencyValue;
+    }
+
+    public Double getTarget() {
+        return target;
+    }
+
+    public void setTarget(Double target) {
+        this.target = target;
     }
 }
