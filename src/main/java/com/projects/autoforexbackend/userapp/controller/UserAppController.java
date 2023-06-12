@@ -3,11 +3,9 @@ package com.projects.autoforexbackend.userapp.controller;
 import com.projects.autoforexbackend.registration.dto.RegistrationRequest;
 import com.projects.autoforexbackend.registration.service.RegistrationService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -23,8 +21,9 @@ public class UserAppController {
         return registrationService.regis(request);
     }
 
-    @PostMapping("/logout")
-    public String logoutDo(HttpServletRequest request, HttpServletResponse response) {
-        return "redirect:/login";
+    @GetMapping("/logout")
+    public String logoutDo(HttpServletRequest request, HttpServletResponse response) throws ServletException {
+        request.logout();
+        return "Logout Sucsessfull";
     }
 }
