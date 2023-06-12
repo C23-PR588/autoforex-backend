@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 @RestController
 @RequestMapping("/registrations")
 @AllArgsConstructor
@@ -20,4 +23,8 @@ public class UserAppController {
         return registrationService.regis(request);
     }
 
+    @PostMapping("/logout")
+    public String logoutDo(HttpServletRequest request, HttpServletResponse response) {
+        return "redirect:/login";
+    }
 }
