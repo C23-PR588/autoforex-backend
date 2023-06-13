@@ -33,4 +33,8 @@ public class UserAppService implements UserDetailsService {
         userAppRepository.save(userApp);
         return "berhasil";
     }
+
+    public UserApp login(String email, String password) {
+        return userAppRepository.findByUsernameAndPassword(email, password);
+    }
 }
