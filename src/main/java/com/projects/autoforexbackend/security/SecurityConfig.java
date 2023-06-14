@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .authenticated().and()
                 .formLogin()
                 .loginPage("/login").permitAll()
-                    .defaultSuccessUrl("/", true)
+                    .defaultSuccessUrl("/home", true)
                     .passwordParameter("password")
                     .usernameParameter("username")
                 .and()
