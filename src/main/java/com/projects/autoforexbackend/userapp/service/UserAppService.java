@@ -34,7 +34,11 @@ public class UserAppService implements UserDetailsService {
         return "berhasil";
     }
 
-    public UserApp login(String email, String password) {
-        return userAppRepository.findByUsernameAndPassword(email, password);
+    public String login(UserApp user) {
+        boolean exists = userAppRepository.existsByEmail(user.getEmail());
+        if (!exists) {
+            throw new IllegalArgumentException("email has been taken");
+        }
+        return "Berhasil";
     }
 }

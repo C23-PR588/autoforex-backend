@@ -3,6 +3,7 @@ package com.projects.autoforexbackend.userapp.controller;
 import com.projects.autoforexbackend.registration.dto.RegistrationRequest;
 import com.projects.autoforexbackend.registration.service.RegistrationService;
 import com.projects.autoforexbackend.userapp.model.UserApp;
+import com.projects.autoforexbackend.userapp.service.UserAppService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 public class UserAppController {
 
     private RegistrationService registrationService;
+    private UserAppService userAppService;
 
     @PostMapping
     public String regis(@RequestBody RegistrationRequest request) throws IllegalAccessException {
@@ -30,9 +32,8 @@ public class UserAppController {
     }
 
     @GetMapping("/login")
-    public ModelAndView login() {
-        ModelAndView mav = new ModelAndView("login");
-        mav.addObject("user", new UserApp());
-        return mav;
+    public String login(UserApp user) {
+        userAppService.login(user);
+        return "Login Berhasil";
     }
 }
