@@ -1,5 +1,7 @@
 # AutoForex Backend CC
 
+Endpoint: http://nomadic-grid-382206.et.r.appspot.com 
+
 ## Auth
 
 ### Register URL /registrations
